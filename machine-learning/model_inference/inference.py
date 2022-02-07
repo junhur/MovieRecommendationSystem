@@ -32,6 +32,17 @@ def SVD_inference(user_id):
         return dummy_inference(user_id)
 
 
+def SVD_inference_fast(user_id):
+    with open(trained_model_path + 'SVD_data.pkl', 'rb') as file:
+        data_df = pickle.load(file)
+    if user_id in data_df['user_id'].unique():
+        with open(trained_model_path + 'SVD_preds.pkl', 'rb') as file:
+            top_n = pickle.load(file)
+        return [x[0] for x in top_n[user_id]]
+    else:
+        return dummy_inference(user_id)
+
+
 def dummy_inference(user_id):
     return get_most_popular_movie_ids(20)
 
@@ -39,3 +50,4 @@ def dummy_inference(user_id):
 if __name__ == '__main__':
     print(dummy_inference(146034))
     print(SVD_inference(146034))
+    print(SVD_inference_fast(146034))

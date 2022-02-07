@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from inference import SVD_inference
+from inference import SVD_inference_fast
 
 # Instantiating FastAPI
 api = FastAPI()
@@ -14,5 +14,5 @@ def root():
 # Defining the recommendation endpoint
 @api.get('/recommend/{userid}')
 async def recommend(userid: int):
-    ids = SVD_inference(userid)
+    ids = SVD_inference_fast(userid)
     return ','.join(x for x in ids)
