@@ -67,13 +67,13 @@ def get_user_info():
 def get_user_watching_history():
     conn = psycopg2.connect(host=DB_HOST, port=DB_PORT, database=DB_NAME, user=DB_USER, password=DB_PSWD)
     cur = conn.cursor()
-    cur.execute('''SELECT user_id, movie_title, MIN(minute), MAX(minute)
-    				   FROM watching
-    				   GROUP BY user_id, movie_title''')
+    cur.execute('''SELECT user_id, movie_title, MIN(minute), MAX(minute), (info->>'runtime')::NUMERIC 
+    				   FROM watching LEFT JOIN movies ON watching.movie_title=movies.title
+    				   GROUP BY user_id, movie_title, info->>'runtime' ''')
     query_results = cur.fetchall()
     cur.close()
     conn.close()
-    return pd.DataFrame(query_results, columns=['user_id', 'movie_title', 'start_time', 'end_time'])
+    return pd.DataFrame(query_results, columns=['user_id', 'movie_title', 'start_time', 'end_time', 'runtime'])
 
 
 if __name__ == '__main__':

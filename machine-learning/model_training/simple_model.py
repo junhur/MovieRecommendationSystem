@@ -1,5 +1,6 @@
 import copy
 import json
+import sys
 from collections import defaultdict
 
 import dill as pickle
@@ -12,11 +13,11 @@ from surprise import Reader
 from surprise.model_selection import cross_validate, GridSearchCV
 from surprise import SVD, SVDpp, KNNBaseline
 
-from .db import get_user_ratings, get_movie_info
-
 from pathlib import Path
-
 path = str(Path(Path(__file__).parent.absolute()).parent.absolute())
+sys.path.insert(0, path)
+from model_training.db import get_user_ratings, get_movie_info, get_user_watching_history
+
 trained_model_path = path + '/pickled_objects/'
 
 
@@ -35,7 +36,7 @@ def cf_get_top_n(predictions, n=10):
     return top_n
 
 
-def collaborative_filtering(algo_f, data_df=None, n_rec=20, hp_tune=False, cv_fold=5, metrics=None):
+def collaborative_filtering(algo_f, data_df=None, extra_df=False, n_rec=20, hp_tune=False, cv_fold=5, metrics=None):
     '''
     Explicit collaborative filtering with surprise
     :param algo_f: algorithms supported by surprise
@@ -55,6 +56,11 @@ def collaborative_filtering(algo_f, data_df=None, n_rec=20, hp_tune=False, cv_fo
     # Loading data and creating datasets
     if data_df is None:
         data_df = get_user_ratings()
+        if extra_df:
+            extra_df = get_user_watching_history()
+            extra_df = extra_df.loc[(extra_df['runtime'] > 0) & (extra_df['start_time'] >= 0) & (extra_df['end_time'] >= 0)]
+            extra_df['score'] = 5 * (extra_df['end_time'] - extra_df['start_time']) / extra_df['runtime']
+            data_df = data_df.append(extra_df[['user_id', 'movie_title', 'score']], ignore_index=True)
     reader = Reader(rating_scale=(1, 5))
     data = Dataset.load_from_df(data_df, reader)
     trainset = data.build_full_trainset()
