@@ -17,6 +17,6 @@ public class Favor8Application {
     @GetMapping
     @Operation(hidden = true)
     public String home() {
-        return "Welcome to Favor8 Movie Recommendation Service!";
+        return "Welcome to Favor8 Movie Recommendation Service!\n";
     }
 }

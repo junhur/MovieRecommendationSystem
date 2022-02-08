@@ -19,7 +19,8 @@ public class RecommendationController {
 
     @GetMapping("{userId}")
     public String recommend(@PathVariable Integer userId) {
-        log.info("user {} requests a recommendation", userId);
-        return recommendationService.recommend(userId);
+        String res = recommendationService.recommend(userId);
+        log.info("req from user {}, res: {}", userId, res);
+        return res;
     }
 }
