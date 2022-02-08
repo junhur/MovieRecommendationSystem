@@ -7,3 +7,6 @@ _  __/    / /_/ / __ |/ / / /_/ /_  /    / /_/ /
 ```
 
 # Favor8 Movie Recommendation Systems
+
+## Architecture diagram
+![architecture diagram](architecture.png)
