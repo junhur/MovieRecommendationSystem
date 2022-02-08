@@ -15,6 +15,29 @@ trained_model_path = path + '/pickled_objects/'
 pred_num_threads = 4
 
 
+def content_based_SVD_hybrid_inference_fast(user_id):
+    with open(trained_model_path + 'SVD_data.pkl', 'rb') as file:
+        data_df = pickle.load(file)
+    if user_id in data_df['user_id'].unique():
+        with open(trained_model_path + 'SVD_preds.pkl', 'rb') as file:
+            top_n = pickle.load(file)
+        title = top_n[user_id][0][0]
+        with open(trained_model_path + 'content_based_model.pkl', 'rb') as file:
+            cosine_sim = pickle.load(file)
+        with open(trained_model_path + 'content_based_indices.pkl', 'rb') as file:
+            indices = pickle.load(file)
+        with open(trained_model_path + 'content_based_titles.pkl', 'rb') as file:
+            titles = pickle.load(file)
+        idx = indices[title]
+        sim_scores = list(enumerate(cosine_sim[idx]))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        sim_scores = sim_scores[1:21]
+        movie_indices = [i[0] for i in sim_scores]
+        return titles.iloc[movie_indices].tolist()
+    else:
+        return popularity_inference(user_id)
+
+
 def SVD_inference(user_id):
     data_df = get_user_ratings()
     if user_id in data_df['user_id'].unique():
@@ -85,3 +108,4 @@ if __name__ == '__main__':
     print(popularity_inference(146034))
     print(SVD_inference(146034))
     print(SVD_inference_fast(146034))
+    print(content_based_SVD_hybrid_inference_fast(146034))
