@@ -1,3 +1,4 @@
+import copy
 import json
 from collections import defaultdict
 
@@ -11,7 +12,7 @@ from surprise import Reader
 from surprise.model_selection import cross_validate, GridSearchCV
 from surprise import SVD, SVDpp, KNNBaseline
 
-from db import get_user_ratings, get_movie_info
+from .db import get_user_ratings, get_movie_info
 
 from pathlib import Path
 
@@ -34,7 +35,7 @@ def cf_get_top_n(predictions, n=10):
     return top_n
 
 
-def collaborative_filtering(algo_f, n_rec=20, hp_tune=False, cv_fold=5, metrics=None):
+def collaborative_filtering(algo_f, data_df=None, n_rec=20, hp_tune=False, cv_fold=5, metrics=None):
     '''
     Explicit collaborative filtering with surprise
     :param algo_f: algorithms supported by surprise
@@ -51,23 +52,24 @@ def collaborative_filtering(algo_f, n_rec=20, hp_tune=False, cv_fold=5, metrics=
     algo = algo_f()
     algo_name = algo_f.__name__
 
-    # Loading data
-    data_df = get_user_ratings()
+    # Loading data and creating datasets
+    if data_df is None:
+        data_df = get_user_ratings()
     reader = Reader(rating_scale=(1, 5))
     data = Dataset.load_from_df(data_df, reader)
+    trainset = data.build_full_trainset()
+    testset = trainset.build_anti_testset()
 
     # Training model
     if hp_tune:
         gs = GridSearchCV(algo_f, param_grid, measures=metrics, cv=cv_fold)
         gs.fit(data)
         algo = gs.best_estimator[metrics[0]]
-        algo.fit(data.build_full_trainset())
+        algo.fit(trainset)
     else:
-        cross_validate(algo, data, measures=metrics, cv=cv_fold, verbose=False)
+        pred_accuracy = cross_validate(algo, data, measures=metrics, cv=cv_fold, verbose=False)
 
     # Than predict ratings for all pairs (u, i) that are NOT in the training set.
-    trainset = data.build_full_trainset()
-    testset = trainset.build_anti_testset()
     predictions = algo.test(testset)
     top_n = cf_get_top_n(predictions, n=n_rec)
 
@@ -92,13 +94,19 @@ def collaborative_filtering(algo_f, n_rec=20, hp_tune=False, cv_fold=5, metrics=
     except Exception:
         print('{} model prediction file generation failed'.format(algo_name))
 
+    return pred_accuracy['test_rmse'], pred_accuracy['test_mae']
 
-def content_based_filtering():
+
+def content_based_filtering(data_df=None):
     '''
     Simple content based filtering with scipy
     '''
+    if data_df is None:
+        data_df = get_movie_info()
+    else:
+        data_df = copy.deepcopy(data_df)
     content_labels = ['movie_title', 'original_title', 'overview', 'genres_json', 'companies_json', 'countries_json']
-    data_df = get_movie_info()[content_labels]
+    data_df = data_df[content_labels]
     data_df['genres_json'] = data_df['genres_json'].apply(lambda x: ' '.join([a['name'] for a in json.loads(x)]))
     data_df['companies_json'] = data_df['companies_json'].apply(lambda x: ' '.join([a['name'] for a in json.loads(x)]))
     data_df['countries_json'] = data_df['countries_json'].apply(
