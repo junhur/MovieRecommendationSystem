@@ -14,9 +14,10 @@ public class KafkaConsumer {
 
     @KafkaListener(topics = "movielog8", groupId = "favor8", autoStartup = "false")
     public void consume(String message) {
-        log.info("Received message: " + message + " 🐯");
+//        log.info("Received message: " + message + " 🐯");
 
         if (message.split(",GET /").length <= 1) {
+            log.info("Recommendation request: " + message + " 🐯");
             return;
         }
 
