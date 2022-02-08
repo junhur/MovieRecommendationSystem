@@ -15,33 +15,43 @@ trained_model_path = path + '/pickled_objects/'
 pred_num_threads = 4
 
 
-def content_based_SVD_hybrid_inference_fast(user_id):
+def content_based_hybrid_inference_fast(user_id):
     with open(trained_model_path + 'SVD_data.pkl', 'rb') as file:
         data_df = pickle.load(file)
     if user_id in data_df['user_id'].unique():
         with open(trained_model_path + 'SVD_preds.pkl', 'rb') as file:
             top_n = pickle.load(file)
-        title = top_n[user_id][0][0]
         with open(trained_model_path + 'content_based_model.pkl', 'rb') as file:
             cosine_sim = pickle.load(file)
         with open(trained_model_path + 'content_based_indices.pkl', 'rb') as file:
             indices = pickle.load(file)
         with open(trained_model_path + 'content_based_titles.pkl', 'rb') as file:
             titles = pickle.load(file)
-        idx = indices[title]
-        sim_scores = list(enumerate(cosine_sim[idx]))
-        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        sim_scores = sim_scores[1:21]
-        movie_indices = [i[0] for i in sim_scores]
-        return titles.iloc[movie_indices].tolist()
-    else:
-        return popularity_inference(user_id)
+        for title in top_n[user_id][0]:
+            if title in indices:
+                idx = indices[title]
+                sim_scores = list(enumerate(cosine_sim[idx]))
+                sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+                sim_scores = sim_scores[1:21]
+                movie_indices = [i[0] for i in sim_scores]
+                return titles.iloc[movie_indices].tolist()
+    return popularity_inference(user_id)
 
 
-def SVD_inference(user_id):
+def content_based_hybrid_inference_fast_avg_rating_pred(user_id):
+    titles = content_based_hybrid_inference_fast(user_id)
+    with open(trained_model_path + 'SVD.pkl', 'rb') as file:
+        algo = pickle.load(file)
+    res = 0
+    for t in titles:
+        res += algo.predict(user_id, t).est
+    return res / len(titles)
+
+
+def CF_inference(algo_name, user_id):
     data_df = get_user_ratings()
     if user_id in data_df['user_id'].unique():
-        with open(trained_model_path + 'SVD.pkl', 'rb') as file:
+        with open(trained_model_path + '{}.pkl'.format(algo_name), 'rb') as file:
             algo = pickle.load(file)
         user_preds = []
 
@@ -57,11 +67,11 @@ def SVD_inference(user_id):
         return popularity_inference(user_id)
 
 
-def SVD_inference_fast(user_id):
-    with open(trained_model_path + 'SVD_data.pkl', 'rb') as file:
+def CF_inference_fast(algo_name, user_id):
+    with open(trained_model_path + '{}_data.pkl'.format(algo_name), 'rb') as file:
         data_df = pickle.load(file)
     if user_id in data_df['user_id'].unique():
-        with open(trained_model_path + 'SVD_preds.pkl', 'rb') as file:
+        with open(trained_model_path + '{}_preds.pkl'.format(algo_name), 'rb') as file:
             top_n = pickle.load(file)
         return [x[0] for x in top_n[user_id]]
     else:
@@ -106,6 +116,4 @@ def popularity_inference(user_id):
 
 if __name__ == '__main__':
     print(popularity_inference(146034))
-    print(SVD_inference(146034))
-    print(SVD_inference_fast(146034))
-    print(content_based_SVD_hybrid_inference_fast(146034))
+    print(content_based_hybrid_inference_fast_avg_rating_pred(146034))
