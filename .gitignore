@@ -25,3 +25,5 @@ machine-learning/**/__pycache__/
 ### VS Code ###
 **/.vscode/
 
+### model files ###
+**/*.pkl
