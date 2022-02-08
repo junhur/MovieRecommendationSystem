@@ -1,13 +1,17 @@
+import json
 from collections import defaultdict
 
 import dill as pickle
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
 
 from surprise import Dataset
 from surprise import Reader
 from surprise.model_selection import cross_validate, GridSearchCV
-from surprise import SVD
+from surprise import SVD, SVDpp, KNNBaseline
 
-from db import get_user_ratings
+from db import get_user_ratings, get_movie_info
 
 from pathlib import Path
 
@@ -15,21 +19,8 @@ path = str(Path(Path(__file__).parent.absolute()).parent.absolute())
 trained_model_path = path + '/pickled_objects/'
 
 
-def get_top_n(predictions, n=10):
+def cf_get_top_n(predictions, n=10):
     # https://surprise.readthedocs.io/en/stable/FAQ.html#how-to-get-the-top-n-recommendations-for-each-user
-    """Return the top-N recommendation for each user from a set of predictions.
-
-    Args:
-        predictions(list of Prediction objects): The list of predictions, as
-            returned by the test method of an algorithm.
-        n(int): The number of recommendation to output for each user. Default
-            is 10.
-
-    Returns:
-    A dict where keys are user (raw) ids and values are lists of tuples:
-        [(raw item id, rating estimation), ...] of size n.
-    """
-
     # First map the predictions to each user.
     top_n = defaultdict(list)
     for uid, iid, true_r, est, _ in predictions:
@@ -43,17 +34,22 @@ def get_top_n(predictions, n=10):
     return top_n
 
 
-if __name__ == '__main__':
-    # ----------------------------------------------
-    # Training surprise models with current database
-    # ----------------------------------------------
+def collaborative_filtering(algo_f, n_rec=20, hp_tune=False, cv_fold=5, metrics=None):
+    '''
+    Explicit collaborative filtering with surprise
+    :param algo_f: algorithms supported by surprise
+    :param n_rec: number of recommended movies
+    :param hp_tune: flag to tune the hyperparameters with grid search
+    :param cv_fold: cross validation folds
+    :param metrics: training metrics
+    '''
     # Algorithm configurations
-    algo = SVD()
-    algo_name = 'SVD'
-    metrics = ['RMSE', 'MAE']
-    cv_fold = 5
-    hyperparameter_tuning = False
+    if metrics is None:
+        metrics = ['RMSE', 'MAE']
     param_grid = {'n_epochs': [5, 10], 'lr_all': [0.002, 0.005], 'reg_all': [0.4, 0.6]}
+
+    algo = algo_f()
+    algo_name = algo_f.__name__
 
     # Loading data
     data_df = get_user_ratings()
@@ -61,10 +57,10 @@ if __name__ == '__main__':
     data = Dataset.load_from_df(data_df, reader)
 
     # Training model
-    if hyperparameter_tuning:
-        gs = GridSearchCV(SVD, param_grid, measures=metrics, cv=cv_fold)
+    if hp_tune:
+        gs = GridSearchCV(algo_f, param_grid, measures=metrics, cv=cv_fold)
         gs.fit(data)
-        algo = gs.best_estimator['rmse']
+        algo = gs.best_estimator[metrics[0]]
         algo.fit(data.build_full_trainset())
     else:
         cross_validate(algo, data, measures=metrics, cv=cv_fold, verbose=False)
@@ -73,7 +69,7 @@ if __name__ == '__main__':
     trainset = data.build_full_trainset()
     testset = trainset.build_anti_testset()
     predictions = algo.test(testset)
-    top_n = get_top_n(predictions, n=20)
+    top_n = cf_get_top_n(predictions, n=n_rec)
 
     # Pickle the predictive model
     try:
@@ -95,3 +91,47 @@ if __name__ == '__main__':
             pickle.dump(top_n, file)
     except Exception:
         print('{} model prediction file generation failed'.format(algo_name))
+
+
+def content_based_filtering():
+    '''
+    Simple content based filtering with scipy
+    '''
+    content_labels = ['movie_title', 'original_title', 'overview', 'genres_json', 'companies_json', 'countries_json']
+    data_df = get_movie_info()[content_labels]
+    data_df['genres_json'] = data_df['genres_json'].apply(lambda x: ' '.join([a['name'] for a in json.loads(x)]))
+    data_df['companies_json'] = data_df['companies_json'].apply(lambda x: ' '.join([a['name'] for a in json.loads(x)]))
+    data_df['countries_json'] = data_df['countries_json'].apply(
+        lambda x: ' '.join([a['iso_3166_1'] for a in json.loads(x)]))
+    data_df['combined'] = data_df[content_labels[1:]].apply(lambda row: ' '.join(row.values.astype(str)), axis=1)
+    tf = TfidfVectorizer(analyzer='word', ngram_range=(1, 2), min_df=0, stop_words='english')
+    tfidf_matrix = tf.fit_transform(data_df['combined'])
+    cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
+    data_df = data_df.reset_index()
+    titles = data_df['movie_title']
+    indices = pd.Series(data_df.index, index=data_df['movie_title'])
+
+    try:
+        with open(trained_model_path + 'content_based_model.pkl', 'wb') as file:
+            pickle.dump(cosine_sim, file)
+    except Exception:
+        print('content based model file generation failed')
+
+    try:
+        with open(trained_model_path + 'content_based_indices.pkl', 'wb') as file:
+            pickle.dump(indices, file)
+    except Exception:
+        print('content based indices file generation failed')
+
+    try:
+        with open(trained_model_path + 'content_based_titles.pkl', 'wb') as file:
+            pickle.dump(titles, file)
+    except Exception:
+        print('content based titles file generation failed')
+
+
+if __name__ == '__main__':
+    collaborative_filtering(SVD)
+    collaborative_filtering(SVDpp)
+    collaborative_filtering(KNNBaseline)
+    content_based_filtering()
