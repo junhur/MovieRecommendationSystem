@@ -17,6 +17,11 @@ public class KafkaConsumer {
 //        log.info("Received message: " + message + " 🐯");
 
         if (message.split(",GET /").length <= 1) {
+            try {
+                kafkaProcessor.process_recommendation_request(message);
+            } catch (Exception e) {
+                log.warn(e.getMessage());
+            }
             log.info("Recommendation request: " + message + " 🐯");
             return;
         }
