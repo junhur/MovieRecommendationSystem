@@ -68,6 +68,7 @@ public class KafkaProcessor {
                 recPo.setResponseTime(Integer.parseInt(response_time.substring(0, response_time.length()-3)));
                 recommendationRequestRepository.saveAndFlush(recPo);
             } catch (Exception e) {
+                // Handling exceptions for potential string manipulation exceptions
                 log.error(message, e.getMessage());
             }
         } else {
@@ -76,21 +77,18 @@ public class KafkaProcessor {
     }
 
     // todo: refactor the string split
-    public void process(String message) {
+    public void process(String message) throws Exception {
         String[] split = message.split(",GET /");
 
         String userId = split[0].split(",")[1];
-        try{
-            storeUser(Integer.parseInt(userId));
-            if (split[1].startsWith("rate")) {
-                storeMovie(split[1].substring(5).split("=")[0]);
-                storeRating(split[0], split[1].substring(5));
-            } else {
-                storeMovie(split[1].substring(7).split("/")[0]);
-                storeWatching(split[0], split[1].substring(7));
-            }
-        } catch (Exception e) {
-            log.warn(message + ": " + e.getMessage());
+        storeUser(Integer.parseInt(userId));
+
+        if (split[1].startsWith("rate")) {
+            storeMovie(split[1].substring(5).split("=")[0]);
+            storeRating(split[0], split[1].substring(5));
+        } else {
+            storeMovie(split[1].substring(7).split("/")[0]);
+            storeWatching(split[0], split[1].substring(7));
         }
     }
 
@@ -98,6 +96,7 @@ public class KafkaProcessor {
         if (userRepository.existsById(id)) {
             return;
         }
+
         try {
             ResponseEntity<String> res = restTemplate.getForEntity("http://128.2.204.215:8080/user/" + id, String.class);
             JsonNode node = objectMapper.readTree(res.getBody());
@@ -119,6 +118,7 @@ public class KafkaProcessor {
         if (movieRepository.existsById(title)) {
             return;
         }
+
         try {
             ResponseEntity<String> res = restTemplate.getForEntity("http://128.2.204.215:8080/movie/" + title, String.class);
             JsonNode node = objectMapper.readTree(res.getBody());
@@ -131,7 +131,7 @@ public class KafkaProcessor {
         }
     }
 
-    public void storeRating(String str1, String str2) {
+    private void storeRating(String str1, String str2) {
         RatingPo rating = new RatingPo();
         rating.setUserId(Integer.parseInt(str1.split(",")[1]));
         rating.setMovieTitle(str2.split("=")[0]);
@@ -140,7 +140,7 @@ public class KafkaProcessor {
         ratingRepository.saveAndFlush(rating);
     }
 
-    public void storeWatching(String str1, String str2) {
+    private void storeWatching(String str1, String str2) {
         WatchingPo watching = new WatchingPo();
         watching.setUserId(Integer.parseInt(str1.split(",")[1]));
         watching.setMovieTitle(str2.split("/")[0]);
