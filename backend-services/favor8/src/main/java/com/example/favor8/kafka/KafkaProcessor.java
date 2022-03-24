@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,11 +60,7 @@ public class KafkaProcessor {
                 int lastCommaIdx = messageByResult[1].lastIndexOf(",");
                 String result = messageByResult[1].substring(0, lastCommaIdx-1);
                 String[] resultArray = result.split(",");
-                Map<String, String> resultDict = new HashMap<>();
-                for (int i = 0; i < resultArray.length; i++) {
-                    resultDict.put(Integer.toString(i), resultArray[i]);
-                }
-                recPo.setResult(new JSONObject(resultDict).toString());
+                recPo.setResults(Arrays.asList(resultArray));
                 String response_time = messageByResult[1].substring(lastCommaIdx+2);
                 recPo.setResponseTime(Integer.parseInt(response_time.substring(0, response_time.length()-3)));
                 recommendationRequestRepository.saveAndFlush(recPo);

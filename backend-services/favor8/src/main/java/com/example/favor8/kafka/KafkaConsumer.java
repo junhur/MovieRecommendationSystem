@@ -30,6 +30,7 @@ public class KafkaConsumer {
             kafkaProcessor.process(message);
         } catch (Exception e) {
             log.warn("user or movie not found: {}", message);
+            log.warn("Exception message: {}", e.getMessage());
         }
     }
 }

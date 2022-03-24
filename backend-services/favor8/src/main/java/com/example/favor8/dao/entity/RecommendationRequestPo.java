@@ -1,6 +1,6 @@
 package com.example.favor8.dao.entity;
 
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+import com.vladmihalcea.hibernate.type.array.ListArrayType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
@@ -8,12 +8,13 @@ import org.hibernate.annotations.TypeDef;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @NoArgsConstructor
 @Data
 @Table(name = "recommendation_request")
 @Entity
-@TypeDef(name="jsonb", typeClass= JsonBinaryType.class)
+@TypeDef(name="list-array", typeClass = ListArrayType.class)
 public class RecommendationRequestPo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,9 +27,9 @@ public class RecommendationRequestPo {
     @Column(name = "status")
     private Integer status;
 
-    @Column(name = "result")
-    @Type(type= "jsonb")
-    private Object result;
+    @Type(type= "list-array")
+    @Column(name = "results", columnDefinition = "text []")
+    private List<String> results;
 
     @Column(name = "response_time")
     private Integer responseTime; // In ms
