@@ -1,28 +1,18 @@
 package com.example.favor8.kafka;
 
-import com.example.favor8.dao.entity.MoviePo;
-import com.example.favor8.dao.entity.RatingPo;
-import com.example.favor8.dao.entity.UserPo;
-import com.example.favor8.dao.entity.WatchingPo;
-import com.example.favor8.dao.entity.RecommendationRequestPo;
-import com.example.favor8.dao.repository.MovieRepository;
-import com.example.favor8.dao.repository.RatingRepository;
-import com.example.favor8.dao.repository.UserRepository;
-import com.example.favor8.dao.repository.WatchingRepository;
-import com.example.favor8.dao.repository.RecommendationRequestRepository;
+import com.example.favor8.dao.entity.*;
+import com.example.favor8.dao.repository.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -73,22 +63,75 @@ public class KafkaProcessor {
         }
     }
 
-    // todo: refactor the string split
+    /**
+     *
+     * @param message: Kafka message
+     *               <time>,<userid>,GET /data/m/<movieid>/<minute>.mpg
+     *               <time>,<userid>,GET /rate/<movieid>=<rating>
+     * @throws Exception logged
+     */
     public void process(String message) throws Exception {
         String[] split = message.split(",GET /");
+        String timeUser = split[0];
 
-        String userId = split[0].split(",")[1];
+        String time = timeUser.split(",")[0];
+        String userId = timeUser.split(",")[1];
+
+        String request =  split[1];
+
+        // data quality check
+        if (isMalformed(time, userId, request)) {
+            return;
+        }
+
         storeUser(Integer.parseInt(userId));
 
-        if (split[1].startsWith("rate")) {
-            storeMovie(split[1].substring(5).split("=")[0]);
-            storeRating(split[0], split[1].substring(5));
+        if (request.startsWith("data")) {
+            // request format: data/m/<movieid>/<minute>.mpg
+            String movieMinute = request.substring(7);
+            String movie = movieMinute.split("/")[0];
+            String minute = movieMinute.split("/")[1].split("\\.")[0];
+            storeMovie(movie);
+            storeWatching(time, userId, movie, minute);
         } else {
-            storeMovie(split[1].substring(7).split("/")[0]);
-            storeWatching(split[0], split[1].substring(7));
+            // request format: rate/<movieid>=<rating>
+            String movieRating = request.substring(5);
+            storeMovie(request.substring(5).split("=")[0]);
+            storeRating(
+                    time,
+                    userId,
+                    movieRating.split("=")[0], // movie
+                    movieRating.split("=")[1]  // rating
+            );
         }
     }
 
+    /**
+     *
+     * @param time time must be not empty
+     * @param userId userId must be an integer
+     * @param request request message must not be empty
+     * @return true if the data is malformed
+     */
+    private boolean isMalformed(String time, String userId, String request) {
+        if (time.isEmpty() || userId.isEmpty() || request.isEmpty()) {
+            log.warn("missing data, time: {}, userId {}, request: {}", time, userId, request);
+            return true;
+        } else if (!StringUtils.isNumeric(userId)) {
+            log.warn("userId must be an integer: {}", userId);
+            return true;
+        } else if (!request.startsWith("data") && !request.startsWith("rate")) {
+            log.warn("unknown request: {}", request);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Store user info if unseen
+     * @param id: userId
+     * @throws Exception logged
+     */
     private void storeUser(Integer id) throws Exception {
         if (userRepository.existsById(id)) {
             return;
@@ -111,6 +154,11 @@ public class KafkaProcessor {
         }
     }
 
+    /**
+     * Store movie info if unseen
+     * @param title: movie tile as id
+     * @throws Exception logged
+     */
     private void storeMovie(String title) throws Exception {
         if (movieRepository.existsById(title)) {
             return;
@@ -128,21 +176,21 @@ public class KafkaProcessor {
         }
     }
 
-    private void storeRating(String str1, String str2) {
-        RatingPo rating = new RatingPo();
-        rating.setUserId(Integer.parseInt(str1.split(",")[1]));
-        rating.setMovieTitle(str2.split("=")[0]);
-        rating.setScore(Integer.parseInt(str2.split("=")[1]));
-        rating.setRatedAt(LocalDateTime.parse(str1.split(",")[0]));
-        ratingRepository.saveAndFlush(rating);
+    private void storeRating(String time, String userId, String movie, String rating) {
+        RatingPo ratingPo = new RatingPo();
+        ratingPo.setUserId(Integer.parseInt(userId));
+        ratingPo.setMovieTitle(movie);
+        ratingPo.setScore(Integer.parseInt(rating));
+        ratingPo.setRatedAt(LocalDateTime.parse(time));
+        ratingRepository.saveAndFlush(ratingPo);
     }
 
-    private void storeWatching(String str1, String str2) {
+    private void storeWatching(String time, String userId, String movie, String minute) {
         WatchingPo watching = new WatchingPo();
-        watching.setUserId(Integer.parseInt(str1.split(",")[1]));
-        watching.setMovieTitle(str2.split("/")[0]);
-        watching.setMinute(Integer.parseInt(str2.split("/")[1].split("\\.")[0]));
-        watching.setWatchedAt(LocalDateTime.parse(str1.split(",")[0]));
+        watching.setUserId(Integer.parseInt(userId));
+        watching.setMovieTitle(movie);
+        watching.setMinute(Integer.parseInt(minute));
+        watching.setWatchedAt(LocalDateTime.parse(time));
         watchingRepository.saveAndFlush(watching);
     }
 }
