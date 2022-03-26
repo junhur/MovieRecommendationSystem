@@ -115,13 +115,13 @@ public class KafkaProcessor {
      */
     private boolean isMalformed(String time, String userId, String request) {
         if (time.isEmpty() || userId.isEmpty() || request.isEmpty()) {
-            log.warn("missing data");
+            log.warn("missing data, time: {}, userId {}, request: {}", time, userId, request);
             return true;
         } else if (!StringUtils.isNumeric(userId)) {
-            log.warn("userId must be an integer");
+            log.warn("userId must be an integer: {}", userId);
             return true;
         } else if (!request.startsWith("data") && !request.startsWith("rate")) {
-            log.warn("unknown request");
+            log.warn("unknown request: {}", request);
             return true;
         }
         return false;
