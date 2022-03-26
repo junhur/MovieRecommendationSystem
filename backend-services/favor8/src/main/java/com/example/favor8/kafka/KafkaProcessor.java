@@ -68,7 +68,7 @@ public class KafkaProcessor {
      * @param message: Kafka message
      *               <time>,<userid>,GET /data/m/<movieid>/<minute>.mpg
      *               <time>,<userid>,GET /rate/<movieid>=<rating>
-     * @throws Exception ignored
+     * @throws Exception logged
      */
     public void process(String message) throws Exception {
         String[] split = message.split(",GET /");
@@ -79,6 +79,10 @@ public class KafkaProcessor {
 
         String request =  split[1];
 
+        // data quality check
+        if (isMalformed(time, userId, request)) {
+            return;
+        }
 
         storeUser(Integer.parseInt(userId));
 
@@ -102,6 +106,32 @@ public class KafkaProcessor {
         }
     }
 
+    /**
+     *
+     * @param time time must be not empty
+     * @param userId userId must be an integer
+     * @param request request message must not be empty
+     * @return true if the data is malformed
+     */
+    private boolean isMalformed(String time, String userId, String request) {
+        if (time.isEmpty() || userId.isEmpty() || request.isEmpty()) {
+            log.warn("missing data");
+            return true;
+        } else if (!StringUtils.isNumeric(userId)) {
+            log.warn("userId must be an integer");
+            return true;
+        } else if (!request.startsWith("data") && !request.startsWith("rate")) {
+            log.warn("unknown request");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Store user info if unseen
+     * @param id: userId
+     * @throws Exception logged
+     */
     private void storeUser(Integer id) throws Exception {
         if (userRepository.existsById(id)) {
             return;
@@ -124,6 +154,11 @@ public class KafkaProcessor {
         }
     }
 
+    /**
+     * Store movie info if unseen
+     * @param title: movie tile as id
+     * @throws Exception logged
+     */
     private void storeMovie(String title) throws Exception {
         if (movieRepository.existsById(title)) {
             return;
