@@ -39,6 +39,7 @@ public class KafkaProcessor {
                 recPo.setRequestedAt(LocalDateTime.parse(timeAndUser[0]));
                 String userId = timeAndUser[1];
                 recPo.setUserId(Integer.parseInt(userId));
+                storeUser(Integer.parseInt(userId));
 
                 // Read status
                 String[] messageByResult = messageByKeyword[1].split("result: ");
