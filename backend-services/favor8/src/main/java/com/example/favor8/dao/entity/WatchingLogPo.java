@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class ResultPo {
+public class WatchingLogPo {
     private Integer userId;
     private Integer status;
     private String movieTitle;
