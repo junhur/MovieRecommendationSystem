@@ -26,12 +26,10 @@ class OnlineEvaluator:
 
     
     def evaluate(self):
-        # print(self.recommendation_map)
-        # print(self.calculate_avg_response_time())
-        
         return {
             "cos_sim": self.calculate_cos_sim(), 
-            "avg_response_time": self.calculate_avg_response_time()
+            "avg_response_time": self.calculate_avg_response_time(),
+            "avg_minute_count": self.calculate_minute_count()
         }
 
     def calculate_avg_response_time(self):
@@ -59,4 +57,13 @@ class OnlineEvaluator:
         return np.mean(max_cos_sims)
     
     def calculate_minute_count(self):
-        return
+        total_count = 0
+        for rec_id, rec_req in self.recommendation_map.items():
+            recommendations = rec_req.results
+            for recommendation in recommendations:
+                watch_log = self.watch_logs[rec_id].get(recommendation, None)
+                if watch_log is not None:
+                    count = watch_log.get_minute_count()
+                    total_count += count
+
+        return total_count / len(self.recommendation_map)

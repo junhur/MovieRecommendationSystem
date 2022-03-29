@@ -12,3 +12,6 @@ class CompoundedWatchLogs:
     
     def get_minute_count(self):
         return len(self.minutes)
+
+    def __repr__(self):
+        return str(len(self.minutes))
