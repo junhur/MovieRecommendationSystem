@@ -19,7 +19,7 @@ public class OnlineEvaluationService {
             return res.getBody();
         } catch (Exception e) {
             log.warn("Something has gone wrong: {}", e.getMessage());
-            return "";
+            return e.getMessage();
         }
     }
 }

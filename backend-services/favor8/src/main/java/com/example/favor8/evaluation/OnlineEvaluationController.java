@@ -18,8 +18,6 @@ public class OnlineEvaluationController {
 
     @GetMapping
     public String evaluate() {
-        String res = evaluationService.evaluate();
-//        log.info("req from user {}, res: {}", userId, res);
-        return res;
+        return evaluationService.evaluate();
     }
 }
