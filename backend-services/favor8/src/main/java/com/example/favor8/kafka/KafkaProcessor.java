@@ -33,34 +33,56 @@ public class KafkaProcessor {
         if (message.contains("recommendation request")) {
             try {
                 RecommendationRequestPo recPo = new RecommendationRequestPo();
-                String[] messageByKeyword = message.split("recommendation request ");
-                // Read time and user
-                String[] timeAndUser = messageByKeyword[0].split(",");
-                recPo.setRequestedAt(LocalDateTime.parse(timeAndUser[0]));
-                String userId = timeAndUser[1];
-                recPo.setUserId(Integer.parseInt(userId));
-                storeUser(Integer.parseInt(userId));
+                String[] parsedStrings = parse_recommendation_request(message);
+                LocalDateTime time = LocalDateTime.parse(parsedStrings[0]);
+                int userId = Integer.parseInt(parsedStrings[1]);
+                int statusCode = Integer.parseInt(parsedStrings[2]);
+                String results = parsedStrings[3];
+                String[] resultArray = results.split(",");
+                int responseTime = Integer.parseInt(parsedStrings[4]);
 
-                // Read status
-                String[] messageByResult = messageByKeyword[1].split("result: ");
-                String[] serverAndStatus = messageByResult[0].split(",");
-                String status = serverAndStatus[1];
-                recPo.setStatus(Integer.parseInt(status.substring(status.length()-3)));
-
-                // Read recommendations and response time
-                int lastCommaIdx = messageByResult[1].lastIndexOf(",");
-                String result = messageByResult[1].substring(0, lastCommaIdx);
-                String[] resultArray = result.split(",");
+                recPo.setRequestedAt(time);
+                recPo.setUserId(userId);
+                storeUser(userId);
+                recPo.setStatus(statusCode);
                 recPo.setResults(Arrays.asList(resultArray));
-                String response_time = messageByResult[1].substring(lastCommaIdx+2);
-                recPo.setResponseTime(Integer.parseInt(response_time.substring(0, response_time.length()-3)));
+                recPo.setResponseTime(responseTime);
                 recommendationRequestRepository.saveAndFlush(recPo);
             } catch (Exception e) {
                 // Handling exceptions for potential string manipulation exceptions
                 log.error(message, e.getMessage());
+                throw new Exception("Error occurred while parsing and storing rec request");
             }
         } else {
             throw new Exception("Unsupported log type");
+        }
+    }
+
+    public String[] parse_recommendation_request(String message) throws Exception {
+        try {
+            String[] messageByKeyword = message.split("recommendation request ");
+            String[] timeAndUser = messageByKeyword[0].split(",");
+            String time = timeAndUser[0];
+            String userId = timeAndUser[1];
+            userId = userId.trim();
+            String[] messageByResult = messageByKeyword[1].split("result: ");
+            String[] serverAndStatus = messageByResult[0].split(",");
+            String[] statusString = serverAndStatus[1].split("status");
+            String status = statusString[1];
+            String statusCode = status.trim();
+            if (statusCode.length() != 3) {
+                throw new Exception("Status code length not equal to 3");
+            }
+
+            int lastCommaIdx = messageByResult[1].lastIndexOf(", ");
+            String result = messageByResult[1].substring(0, lastCommaIdx);
+            result = result.trim();
+            String responseTime = messageByResult[1].substring(lastCommaIdx + 2);
+            String responseTimeNum = responseTime.split("ms")[0];
+            responseTimeNum = responseTimeNum.trim();
+            return new String[]{time, userId, statusCode, result, responseTimeNum};
+        } catch (Exception e) {
+            throw new Exception("Recommendation request not in expected format: " + e.getMessage());
         }
     }
 
