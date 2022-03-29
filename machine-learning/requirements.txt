@@ -6,3 +6,6 @@ psycopg2==2.9.3
 scikit_surprise==1.1.1
 surprise==0.1
 uvicorn==0.17.4
+scikit-learn
+azureml-core
+azureml-pipeline-core
