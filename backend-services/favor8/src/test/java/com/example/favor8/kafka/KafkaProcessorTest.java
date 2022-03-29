@@ -12,8 +12,6 @@ import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class KafkaProcessorTest {
@@ -122,6 +120,9 @@ public class KafkaProcessorTest {
             processor.process_recommendation_request(recRequest);
 
             Mockito.verify(userRepository, Mockito.times(1)).saveAndFlush(ArgumentMatchers.any(UserPo.class));
+            Mockito.verify(recommendationRequestRepository, Mockito.times(1)).saveAndFlush(ArgumentMatchers.any(RecommendationRequestPo.class));
+
+            // TODO: figure out why argument captor throws UnfinishedVerificationException
 //            Mockito.verify(recommendationRequestRepository).saveAndFlush(recommendationRequestPoArgumentCaptor.capture());
 //
 //            RecommendationRequestPo recPo = recommendationRequestPoArgumentCaptor.getValue();
