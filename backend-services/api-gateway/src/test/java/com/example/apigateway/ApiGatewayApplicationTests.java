@@ -1,10 +1,10 @@
-package com.example.loadbalancer;
+package com.example.apigateway;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class LoadBalancerApplicationTests {
+class ApiGatewayApplicationTests {
 
     @Test
     void contextLoads() {
