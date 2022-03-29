@@ -1,6 +1,5 @@
 package com.example.apigateway.controller;
 
-import com.example.apigateway.controller.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
