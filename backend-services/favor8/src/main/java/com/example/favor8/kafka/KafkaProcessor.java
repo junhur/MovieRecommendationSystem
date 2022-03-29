@@ -49,7 +49,7 @@ public class KafkaProcessor {
 
                 // Read recommendations and response time
                 int lastCommaIdx = messageByResult[1].lastIndexOf(",");
-                String result = messageByResult[1].substring(0, lastCommaIdx-1);
+                String result = messageByResult[1].substring(0, lastCommaIdx);
                 String[] resultArray = result.split(",");
                 recPo.setResults(Arrays.asList(resultArray));
                 String response_time = messageByResult[1].substring(lastCommaIdx+2);

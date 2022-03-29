@@ -16,7 +16,7 @@ from surprise import SVD, SVDpp, KNNBaseline
 from pathlib import Path
 path = str(Path(Path(__file__).parent.absolute()).parent.absolute())
 sys.path.insert(0, path)
-from model_training.db import get_user_ratings, get_movie_info, get_user_watching_history
+from data_access.db import get_user_ratings, get_movie_info, get_user_watching_history
 
 trained_model_path = path + '/pickled_objects/'
 

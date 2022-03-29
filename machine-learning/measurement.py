@@ -2,7 +2,7 @@ import os, time
 from pathlib import Path
 path = str(Path(__file__).parent.absolute())
 from surprise import SVD, SVDpp, KNNBaseline
-from model_training.db import get_user_ratings, get_movie_info
+from data_access.db import get_user_ratings, get_movie_info
 from model_inference.inference import CF_inference_fast, content_based_hybrid_inference_fast, content_based_hybrid_inference_fast_avg_rating_pred
 from model_training.simple_model import collaborative_filtering, content_based_filtering
 
