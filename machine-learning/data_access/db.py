@@ -9,13 +9,6 @@ with open("secrets.txt") as f:
     DB_USER = lines[3].strip()
     DB_PSWD = lines[4].strip()
 
-## DB information
-# DB_HOST = 'favor8-pg.postgres.database.azure.com'
-# DB_PORT = 5432
-# DB_NAME = 'postgres'
-# DB_USER = 'favor8'
-# DB_PSWD = 'Cmu17645!'
-
 def get_movie_info_from_titles(recommended, watched):
     conn = psycopg2.connect(host=DB_HOST, port=DB_PORT, database=DB_NAME, user=DB_USER, password=DB_PSWD)
     cur = conn.cursor()
