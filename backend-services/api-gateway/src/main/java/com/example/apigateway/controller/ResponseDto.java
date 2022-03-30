@@ -1,4 +1,4 @@
-package com.example.apigateway.controller.dto;
+package com.example.apigateway.controller;
 
 import lombok.Data;
 
