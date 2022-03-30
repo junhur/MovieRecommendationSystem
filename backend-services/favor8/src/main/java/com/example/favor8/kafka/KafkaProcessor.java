@@ -29,11 +29,11 @@ public class KafkaProcessor {
 
     private final RestTemplate restTemplate;
 
-    public void process_recommendation_request(String message) throws Exception {
+    public void processRecommendationRequest(String message) throws Exception {
         if (message.contains("recommendation request")) {
             try {
                 RecommendationRequestPo recPo = new RecommendationRequestPo();
-                String[] parsedStrings = parse_recommendation_request(message);
+                String[] parsedStrings = parseRecommendationRequest(message);
                 LocalDateTime time = LocalDateTime.parse(parsedStrings[0]);
                 int userId = Integer.parseInt(parsedStrings[1]);
                 int statusCode = Integer.parseInt(parsedStrings[2]);
@@ -58,7 +58,7 @@ public class KafkaProcessor {
         }
     }
 
-    public String[] parse_recommendation_request(String message) throws Exception {
+    public String[] parseRecommendationRequest(String message) throws Exception {
         try {
             String[] messageByKeyword = message.split("recommendation request ");
             String[] timeAndUser = messageByKeyword[0].split(",");
@@ -129,6 +129,22 @@ public class KafkaProcessor {
         }
     }
 
+//    public String[] processWatchRatingLogs(String message) throws Exception {
+//        String[] split = message.split(",GET /");
+//        String timeUser = split[0];
+//
+//        String time = timeUser.split(",")[0];
+//        String userId = timeUser.split(",")[1];
+//
+//        String request =  split[1];
+//
+//        // data quality check
+//        if (isMalformed(time, userId, request)) {
+//            throw new Exception("Malformed message");
+//        }
+//
+//    }
+//
     /**
      *
      * @param time time must be not empty
@@ -164,7 +180,7 @@ public class KafkaProcessor {
             ResponseEntity<String> res = restTemplate.getForEntity("http://128.2.204.215:8080/user/" + id, String.class);
             JsonNode node = objectMapper.readTree(res.getBody());
             UserPo user = new UserPo();
-            user.setId(id);
+            user.setId(node.get("user_id").asInt());
             user.setAge(node.get("age").asInt());
             user.setOccupation(node.get("occupation").asText());
             user.setGender(node.get("gender").asText());
@@ -191,7 +207,7 @@ public class KafkaProcessor {
             ResponseEntity<String> res = restTemplate.getForEntity("http://128.2.204.215:8080/movie/" + title, String.class);
             JsonNode node = objectMapper.readTree(res.getBody());
             MoviePo movie = new MoviePo();
-            movie.setTitle(title);
+            movie.setTitle(node.get("id").asText());
             movie.setInfo(node.toString());
             movieRepository.saveAndFlush(movie);
         } catch (Exception e) {
