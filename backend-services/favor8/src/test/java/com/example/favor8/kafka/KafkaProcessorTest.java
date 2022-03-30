@@ -12,6 +12,8 @@ import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class KafkaProcessorTest {
@@ -29,8 +31,7 @@ public class KafkaProcessorTest {
     private final RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
 
     //ArgumentCaptors
-    @Captor
-    private ArgumentCaptor<RecommendationRequestPo> recommendationRequestPoArgumentCaptor;
+    private ArgumentCaptor<RecommendationRequestPo> recommendationRequestPoArgumentCaptor = ArgumentCaptor.forClass(RecommendationRequestPo.class);
 
     // Parameter Kafka message Strings for Recommendation Request processing
     private final String recRequest = "2022-03-04T20:22:00.415793,514537,recommendation request 17645-team08.isri.cmu.edu:8082, status 200, result: fight+club+1999, penguins+of+madagascar+2014, pirates+of+the+caribbean+on+stranger+tides+2011, spider-man+3+2007, the+maze+runner+2014, iron+man+3+2013, aliens+1986, the+godfather+part+ii+1974, pirates+of+the+caribbean+at+worlds+end+2007, the+hobbit+an+unexpected+journey+2012, x-men+days+of+future+past+2014, the+amazing+spider-man+2012, dark+skies+2013, ghostbusters+1984, pans+labyrinth+2006, finding+nemo+2003, the+hobbit+the+battle+of+the+five+armies+2014, the+lord+of+the+rings+the+fellowship+of+the+ring+2001, the+incredibles+2004, the+fifth+element+1997, 391 ms";
@@ -112,6 +113,7 @@ public class KafkaProcessorTest {
     @Test
     @DisplayName("Happy path process recommendation request")
     void process_recommendation_request() {
+        Mockito.reset(userRepository, movieRepository, ratingRepository, watchingRepository, recommendationRequestRepository, restTemplate);
         KafkaProcessor processor = new KafkaProcessor(userRepository, movieRepository, ratingRepository, watchingRepository, recommendationRequestRepository, restTemplate);
         try {
             ResponseEntity<String> userInfo = ResponseEntity.ok(userInfoBody);
@@ -120,16 +122,13 @@ public class KafkaProcessorTest {
             processor.process_recommendation_request(recRequest);
 
             Mockito.verify(userRepository, Mockito.times(1)).saveAndFlush(ArgumentMatchers.any(UserPo.class));
-            Mockito.verify(recommendationRequestRepository, Mockito.times(1)).saveAndFlush(ArgumentMatchers.any(RecommendationRequestPo.class));
+            Mockito.verify(recommendationRequestRepository, Mockito.times(1)).saveAndFlush(recommendationRequestPoArgumentCaptor.capture());
 
-            // TODO: figure out why argument captor throws UnfinishedVerificationException
-//            Mockito.verify(recommendationRequestRepository).saveAndFlush(recommendationRequestPoArgumentCaptor.capture());
-//
-//            RecommendationRequestPo recPo = recommendationRequestPoArgumentCaptor.getValue();
-//            assertEquals(recPo.getUserId(), 514537);
-//            assertEquals(recPo.getRequestedAt(), LocalDateTime.parse("2022-03-04T20:22:00.415793"));
-//            assertEquals(recPo.getResponseTime(), 391);
-//            assertEquals(recPo.getStatus(), 200);
+            RecommendationRequestPo recPo = recommendationRequestPoArgumentCaptor.getValue();
+            assertEquals(recPo.getUserId(), 514537);
+            assertEquals(recPo.getRequestedAt(), LocalDateTime.parse("2022-03-04T20:22:00.415793"));
+            assertEquals(recPo.getResponseTime(), 391);
+            assertEquals(recPo.getStatus(), 200);
         } catch (Exception e) {
             // do nothing
         }
