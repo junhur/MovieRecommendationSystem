@@ -29,38 +29,60 @@ public class KafkaProcessor {
 
     private final RestTemplate restTemplate;
 
-    public void process_recommendation_request(String message) throws Exception {
+    public void processRecommendationRequest(String message) throws Exception {
         if (message.contains("recommendation request")) {
             try {
                 RecommendationRequestPo recPo = new RecommendationRequestPo();
-                String[] messageByKeyword = message.split("recommendation request ");
-                // Read time and user
-                String[] timeAndUser = messageByKeyword[0].split(",");
-                recPo.setRequestedAt(LocalDateTime.parse(timeAndUser[0]));
-                String userId = timeAndUser[1];
-                recPo.setUserId(Integer.parseInt(userId));
-                storeUser(Integer.parseInt(userId));
+                String[] parsedStrings = parseRecommendationRequest(message);
+                LocalDateTime time = LocalDateTime.parse(parsedStrings[0]);
+                int userId = Integer.parseInt(parsedStrings[1]);
+                int statusCode = Integer.parseInt(parsedStrings[2]);
+                String results = parsedStrings[3];
+                String[] resultArray = results.split(",");
+                int responseTime = Integer.parseInt(parsedStrings[4]);
 
-                // Read status
-                String[] messageByResult = messageByKeyword[1].split("result: ");
-                String[] serverAndStatus = messageByResult[0].split(",");
-                String status = serverAndStatus[1];
-                recPo.setStatus(Integer.parseInt(status.substring(status.length()-3)));
-
-                // Read recommendations and response time
-                int lastCommaIdx = messageByResult[1].lastIndexOf(",");
-                String result = messageByResult[1].substring(0, lastCommaIdx);
-                String[] resultArray = result.split(",");
+                recPo.setRequestedAt(time);
+                recPo.setUserId(userId);
+                storeUser(userId);
+                recPo.setStatus(statusCode);
                 recPo.setResults(Arrays.asList(resultArray));
-                String response_time = messageByResult[1].substring(lastCommaIdx+2);
-                recPo.setResponseTime(Integer.parseInt(response_time.substring(0, response_time.length()-3)));
+                recPo.setResponseTime(responseTime);
                 recommendationRequestRepository.saveAndFlush(recPo);
             } catch (Exception e) {
                 // Handling exceptions for potential string manipulation exceptions
                 log.error(message, e.getMessage());
+                throw new Exception("Error occurred while parsing and storing rec request");
             }
         } else {
             throw new Exception("Unsupported log type");
+        }
+    }
+
+    public String[] parseRecommendationRequest(String message) throws Exception {
+        try {
+            String[] messageByKeyword = message.split("recommendation request ");
+            String[] timeAndUser = messageByKeyword[0].split(",");
+            String time = timeAndUser[0];
+            String userId = timeAndUser[1];
+            userId = userId.trim();
+            String[] messageByResult = messageByKeyword[1].split("result: ");
+            String[] serverAndStatus = messageByResult[0].split(",");
+            String[] statusString = serverAndStatus[1].split("status");
+            String status = statusString[1];
+            String statusCode = status.trim();
+            if (statusCode.length() != 3) {
+                throw new Exception("Status code length not equal to 3");
+            }
+
+            int lastCommaIdx = messageByResult[1].lastIndexOf(", ");
+            String result = messageByResult[1].substring(0, lastCommaIdx);
+            result = result.trim();
+            String responseTime = messageByResult[1].substring(lastCommaIdx + 2);
+            String responseTimeNum = responseTime.split("ms")[0];
+            responseTimeNum = responseTimeNum.trim();
+            return new String[]{time, userId, statusCode, result, responseTimeNum};
+        } catch (Exception e) {
+            throw new Exception("Recommendation request not in expected format: " + e.getMessage());
         }
     }
 
@@ -107,6 +129,22 @@ public class KafkaProcessor {
         }
     }
 
+//    public String[] processWatchRatingLogs(String message) throws Exception {
+//        String[] split = message.split(",GET /");
+//        String timeUser = split[0];
+//
+//        String time = timeUser.split(",")[0];
+//        String userId = timeUser.split(",")[1];
+//
+//        String request =  split[1];
+//
+//        // data quality check
+//        if (isMalformed(time, userId, request)) {
+//            throw new Exception("Malformed message");
+//        }
+//
+//    }
+//
     /**
      *
      * @param time time must be not empty
@@ -142,7 +180,7 @@ public class KafkaProcessor {
             ResponseEntity<String> res = restTemplate.getForEntity("http://128.2.204.215:8080/user/" + id, String.class);
             JsonNode node = objectMapper.readTree(res.getBody());
             UserPo user = new UserPo();
-            user.setId(id);
+            user.setId(node.get("user_id").asInt());
             user.setAge(node.get("age").asInt());
             user.setOccupation(node.get("occupation").asText());
             user.setGender(node.get("gender").asText());
@@ -169,7 +207,7 @@ public class KafkaProcessor {
             ResponseEntity<String> res = restTemplate.getForEntity("http://128.2.204.215:8080/movie/" + title, String.class);
             JsonNode node = objectMapper.readTree(res.getBody());
             MoviePo movie = new MoviePo();
-            movie.setTitle(title);
+            movie.setTitle(node.get("id").asText());
             movie.setInfo(node.toString());
             movieRepository.saveAndFlush(movie);
         } catch (Exception e) {
