@@ -129,22 +129,7 @@ public class KafkaProcessor {
         }
     }
 
-//    public String[] processWatchRatingLogs(String message) throws Exception {
-//        String[] split = message.split(",GET /");
-//        String timeUser = split[0];
-//
-//        String time = timeUser.split(",")[0];
-//        String userId = timeUser.split(",")[1];
-//
-//        String request =  split[1];
-//
-//        // data quality check
-//        if (isMalformed(time, userId, request)) {
-//            throw new Exception("Malformed message");
-//        }
-//
-//    }
-//
+
     /**
      *
      * @param time time must be not empty
