@@ -26,4 +26,4 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
     - name: Build with Maven
-      run: mvn -B package --file backend-services/favor8/pom.xml
+      run: mvn clean install spring-boot:start -Dspring.profiles.active=github
