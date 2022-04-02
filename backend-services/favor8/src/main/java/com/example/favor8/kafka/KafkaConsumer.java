@@ -17,6 +17,11 @@ public class KafkaConsumer {
 //        log.info("Received message: " + message + " 🐯");
 
         if (message.split(",GET /").length <= 1) {
+            try {
+                kafkaProcessor.processRecommendationRequest(message);
+            } catch (Exception e) {
+                log.warn(e.getMessage());
+            }
             log.info("Recommendation request: " + message + " 🐯");
             return;
         }
@@ -25,6 +30,7 @@ public class KafkaConsumer {
             kafkaProcessor.process(message);
         } catch (Exception e) {
             log.warn("user or movie not found: {}", message);
+            log.warn("Exception message: {}", e.getMessage());
         }
     }
 }

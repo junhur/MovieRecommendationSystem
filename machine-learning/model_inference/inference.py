@@ -8,7 +8,7 @@ import sys
 
 path = str(Path(Path(__file__).parent.absolute()).parent.absolute())
 sys.path.insert(0, path)
-from model_training.db import get_most_popular_movie_ids, get_user_ratings
+from data_access.db import get_most_popular_movie_ids, get_user_ratings
 
 # Inference information
 trained_model_path = path + '/pickled_objects/'
