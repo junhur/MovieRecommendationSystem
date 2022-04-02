@@ -43,7 +43,7 @@ jobs:
         restore-keys: ${{ runner.os }}-m2
     - name: Build with Maven
       env:
-	SPRING_PROFILES_ACTIVE: secret
+        SPRING_PROFILES_ACTIVE: secret
         PG_PASSWORD: postgres
       run: |
         cd backend-services/favor8
