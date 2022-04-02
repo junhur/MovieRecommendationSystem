@@ -43,12 +43,11 @@ jobs:
         restore-keys: ${{ runner.os }}-m2
     - name: Build with Maven
       env:
-        SPRING_PROFILES_ACTIVE: secret
         PG_HOST: localhost
         PG_DB: postgres
         PG_USER: postgres
         PG_PASSWORD: postgres
       run: |
         cd backend-services/favor8
-        mvn clean install spring-boot:start
+        mvn clean install spring-boot:start -Dspring.profiles.active=secret
         echo $POSTGRES_HOST
