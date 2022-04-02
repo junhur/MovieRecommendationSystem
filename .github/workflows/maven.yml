@@ -49,6 +49,4 @@ jobs:
         PG_PASSWORD: postgres
       run: |
         cd backend-services/favor8
-        echo $PG_HOST
-        echo ${{ secrets.VM_USERNAME }}
-        echo $PG_USER
+        mvn clean install spring-boot:start -Dspring.profiles.active=secret
