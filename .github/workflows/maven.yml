@@ -16,6 +16,8 @@ jobs:
         image: postgres
         # Provide the password for postgres
         env:
+          POSTGRES_URL: jdbc:postgresql://localhost:5432/postgres
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         # Set health checks to wait until postgres has started
         options: >-
@@ -42,4 +44,4 @@ jobs:
       run: |
         cd backend-services/favor8
         echo ${{ secrets.AZURE_POSTGRES_URL }}
-        mvn -B package
+        mvn clean install spring-boot:start -Dspring.profiles.active=secret
