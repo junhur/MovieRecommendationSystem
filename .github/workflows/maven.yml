@@ -28,4 +28,5 @@ jobs:
     - name: Build with Maven
       run: |
         cd backend-services/favor8
+        echo ${{ secrets.AZURE_POSTGRES_URL }}
         mvn clean install spring-boot:start -Dspring.datasource.url=${{ secrets.AZURE_POSTGRES_URL }} -Dspring.datasource.username=${{ secrets.AZURE_POSTGRES_USERNAME }} -Dspring.datasource.password=${{ secrets.AZURE_POSTGRES_PSWD }}
