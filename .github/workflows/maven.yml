@@ -27,9 +27,9 @@ jobs:
     - name: Build with Maven
       env:
         SPRING_PROFILES_ACTIVE: secret
-        PG_URL: jdbc:postgresql://128.2.205.110:5432/movielog
-        PG_USERNAME: github
-        PG_PASSWORD: postgres
+        PG_URL: ${{ secrets.VM_URL }}
+        PG_USERNAME: ${{ secrets.VM_USERNAME }}
+        PG_PASSWORD: ${{ secrets.VM_PASSWORD }}
       run: |
         cd backend-services/favor8
         mvn clean install spring-boot:start
