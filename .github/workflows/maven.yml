@@ -9,7 +9,20 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - uses: actions/checkout@v3
     - name: Set up JDK 11
@@ -28,4 +41,5 @@ jobs:
     - name: Build with Maven
       run: |
         cd backend-services/favor8
-        mvn clean install spring-boot:start -Dspring.datasource.url=${{ secrets.AZURE_POSTGRES_URL }} -Dspring.datasource.username=${{ secrets.AZURE_POSTGRES_USERNAME }} -Dspring.datasource.password=${{ secrets.AZURE_POSTGRES_PSWD }}
+        echo ${{ secrets.AZURE_POSTGRES_URL }}
+        mvn -B package
