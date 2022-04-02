@@ -44,10 +44,10 @@ jobs:
     - name: Build with Maven
       env:
         SPRING_PROFILES_ACTIVE: secret
-        PG_HOST: ${{ jobs.services.postgres.POSTGRES_HOST }}
-        PG_DB: ${{ jobs.services.postgres.POSTGRES_DB }}
-        PG_USER: ${{ jobs.services.postgres.POSTGRES_USER }}
-        PG_PASSWORD: ${{ jobs.services.postgres.POSTGRES_PASSWORD }}
+        PG_HOST: localhost
+        PG_DB: postgres
+        PG_USER: postgres
+        PG_PASSWORD: postgres
       run: |
         cd backend-services/favor8
         mvn clean install spring-boot:start
