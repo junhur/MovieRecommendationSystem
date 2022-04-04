@@ -1,5 +1,7 @@
+backend-services/kafka
+backend-services/pom.xml
+
 backend-services/**/HELP.md
-backend-services/**/config/*-*.yml
 backend-services/**/config/*-*.yml
 backend-services/**/target/
 backend-services/**/!.mvn/wrapper/maven-wrapper.jar

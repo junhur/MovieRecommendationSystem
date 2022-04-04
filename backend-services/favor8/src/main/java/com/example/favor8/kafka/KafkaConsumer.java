@@ -18,7 +18,7 @@ public class KafkaConsumer {
 
         if (message.split(",GET /").length <= 1) {
             try {
-                kafkaProcessor.process_recommendation_request(message);
+                kafkaProcessor.processRecommendationRequest(message);
             } catch (Exception e) {
                 log.warn(e.getMessage());
             }
