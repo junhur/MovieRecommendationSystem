@@ -26,5 +26,4 @@ if __name__=='__main__':
     pipeline_run.wait_for_completion(show_output=True)
 
     metrics = pipeline_run.get_metrics()
-    with open('metrics.json', 'a') as fp:
-        json.dump(metrics, fp)
+    print('Training metrics:\n{}'.format(metrics))
