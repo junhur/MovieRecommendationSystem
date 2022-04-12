@@ -7,5 +7,6 @@ scikit_surprise==1.1.1
 surprise==0.1
 uvicorn==0.17.4
 scikit-learn
+schedule==1.1.0
 azureml-core
 azureml-pipeline-core
