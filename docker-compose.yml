@@ -1,0 +1,19 @@
+version: '3'
+services:
+  api-gateway:
+    build:
+      context: ./backend-services/api-gateway
+    ports:
+      - "8082:8082"
+    depends_on:
+      - prediction
+  favor8:
+    build:
+      context: ./backend-services/favor8
+    ports:
+      - "8080:8080"
+  prediction:
+    build:
+      context: ./machine-learning/model_inference
+    ports:
+      - "8000:8000"
