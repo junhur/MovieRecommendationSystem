@@ -67,15 +67,19 @@ def CF_inference(algo_name, user_id):
         return popularity_inference(user_id)
 
 
-def CF_inference_fast(algo_name, user_id):
-    with open(trained_model_path + '{}_data.pkl'.format(algo_name), 'rb') as file:
-        data_df = pickle.load(file)
-    if user_id in data_df['user_id'].unique():
-        with open(trained_model_path + '{}_preds.pkl'.format(algo_name), 'rb') as file:
-            top_n = pickle.load(file)
-        return [x[0] for x in top_n[user_id]]
-    else:
-        return popularity_inference(user_id)
+def CF_inference_fast(algo_name, user_id, version=None):
+    identifier = algo_name + '_' + str(version) if version is not None else algo_name
+    try:
+        with open(trained_model_path + '{}_data.pkl'.format(identifier), 'rb') as file:
+            data_df = pickle.load(file)
+        if user_id in data_df['user_id'].unique():
+            with open(trained_model_path + '{}_preds.pkl'.format(identifier), 'rb') as file:
+                top_n = pickle.load(file)
+            return [x[0] for x in top_n[user_id]], version
+        else:
+            return popularity_inference(user_id), -1
+    except FileNotFoundError:
+        return popularity_inference(user_id), -1
 
 
 def popularity_inference(user_id):
