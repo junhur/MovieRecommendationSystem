@@ -6,8 +6,6 @@ from online_evaluation.online_eval import OnlineEvaluator
 
 inference_algo_name_a = 'SVD'
 inference_algo_name_b = 'SVD'
-model_version_a = get_latest_model_version()
-model_version_b = model_version_a - 1 if model_version_a > 0 else None
 
 # Instantiating FastAPI
 api = FastAPI()
@@ -24,14 +22,14 @@ def root():
 @api.get('/recommend/a/{userid}')
 @api.get('/recommend/{userid}')
 async def recommend(userid: int):
-    ids, version = CF_inference_fast(inference_algo_name_a, userid, model_version_a)
+    ids, version = CF_inference_fast(inference_algo_name_a, userid, True)
     return ','.join(x for x in ids), version
 
 
 # testing endpoint B
 @api.get('/recommend/b/{userid}')
 async def recommend(userid: int):
-    ids, version = CF_inference_fast(inference_algo_name_b, userid, model_version_b)
+    ids, version = CF_inference_fast(inference_algo_name_b, userid, False)
     return ','.join(x for x in ids), version
 
 

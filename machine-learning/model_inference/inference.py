@@ -8,7 +8,7 @@ import sys
 
 path = str(Path(Path(__file__).parent.absolute()).parent.absolute())
 sys.path.insert(0, path)
-from data_access.db import get_most_popular_movie_ids, get_user_ratings
+from data_access.db import get_most_popular_movie_ids, get_user_ratings, get_latest_model_version
 
 # Inference information
 trained_model_path = path + '/pickled_objects/'
@@ -67,7 +67,10 @@ def CF_inference(algo_name, user_id):
         return popularity_inference(user_id)
 
 
-def CF_inference_fast(algo_name, user_id, version=None):
+def CF_inference_fast(algo_name, user_id, latest=True):
+    model_version_a = get_latest_model_version()
+    model_version_b = model_version_a - 1 if model_version_a > 0 else None
+    version = model_version_a if latest else model_version_b
     identifier = algo_name + '_' + str(version) if version is not None else algo_name
     try:
         with open(trained_model_path + '{}_data.pkl'.format(identifier), 'rb') as file:
