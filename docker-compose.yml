@@ -25,11 +25,11 @@ services:
   #     - app
   #   depends_on:
   #     - db_data
-  python-app:
+  model_inference:
     build: 
       context: ./machine-learning
-    container_name: python-app
-    image: python-app
+    container_name: model_inference
+    image: model_inference
     expose:
       - 8000
     ports:
@@ -75,4 +75,17 @@ services:
     networks:
       - monitoring
   
+  api-gateway:
+    build:
+      context: ./backend-services/api-gateway
+    ports:
+      - "8082:8082"
+    depends_on:
+      - prediction
+  
+  favor8:
+    build:
+      context: ./backend-services/favor8
+    ports:
+      - "8080:8080"
   
