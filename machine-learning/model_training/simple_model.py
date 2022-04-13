@@ -148,14 +148,18 @@ def content_based_filtering(data_df=None):
         print('content based titles file generation failed')
 
 
-def train_model(args, data=None, version=None):
+def train_model(args=None, data=None, version=None):
     algo_f_dict = {'svd': SVD, 'svd++': SVDpp, 'knn': KNNBaseline}
-    try:
-        algo_f = algo_f_dict[args.algo]
-    except KeyError:
-        print('Algorithm {} not supported'.format(args.algo))
-        return
-    collaborative_filtering(algo_f, data_df=data, n_rec=args.n_rec, hp_tune=args.hp_tune, cv_fold=args.cv_fold, version=version)
+    if args is None:
+        collaborative_filtering(SVD, data_df=data, n_rec=20, hp_tune=False, cv_fold=5, version=version)
+    else:
+        try:
+            algo_f = algo_f_dict[args.algo]
+        except KeyError:
+            print('Algorithm {} not supported'.format(args.algo))
+            return
+        collaborative_filtering(algo_f, data_df=data, n_rec=args.n_rec, hp_tune=args.hp_tune, cv_fold=args.cv_fold,
+                                version=version)
 
 
 def test_model():

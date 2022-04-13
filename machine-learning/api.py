@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-
-from data_access.db import get_latest_model_version
+from fastapi_utils.tasks import repeat_every
 from model_inference.inference import CF_inference_fast
+from model_training.scheduler import retrain_model
 from online_evaluation.online_eval import OnlineEvaluator
 
 inference_algo_name_a = 'SVD'
@@ -37,3 +37,9 @@ async def recommend(userid: int):
 async def evaluate():
     evaluator = OnlineEvaluator()
     return evaluator.evaluate()
+
+
+@api.on_event('startup')
+@repeat_every(seconds=60*60*24)
+def retrain():
+    retrain_model()

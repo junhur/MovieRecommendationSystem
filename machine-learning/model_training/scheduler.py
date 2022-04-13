@@ -19,7 +19,7 @@ def get_git_hash():
         return 'unknown'
 
 
-def retrain_model(args):
+def retrain_model(args=None):
     '''
     Retrain the model
     '''
