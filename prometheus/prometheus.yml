@@ -34,12 +34,25 @@ scrape_configs:
   #   # scheme defaults to 'http'.
   #   static_configs:
   #       - targets: ['0.0.0.0:8765'] #target here
-  - job_name: 'python-app'
+
+  - job_name: 'model_inference'
     scrape_interval: 5s
     static_configs:
-        - targets: ['python-app:8000']
+        - targets: [ 'model_inference:8000' ]
 
   - job_name: 'node'
     scrape_interval: 5s
     static_configs:
         - targets: [ 'nodeexporter:9100'] #target here
+
+  - job_name: 'favor8'
+    scrape_interval: 5s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+        - targets: ['favor8:8080']
+  
+  - job_name: 'api-gateway'
+    scrape_interval: 5s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+        - targets: [ 'api-gateway:8082' ]

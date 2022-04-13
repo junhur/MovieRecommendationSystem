@@ -1,4 +1,4 @@
-FROM openjdk:11-alpine
+FROM openjdk:11
 VOLUME /tmp
 COPY target/*.jar favor8.jar
 EXPOSE 8080

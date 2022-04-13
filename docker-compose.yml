@@ -29,7 +29,6 @@ services:
     build: 
       context: ./machine-learning
     container_name: model_inference
-    image: model_inference
     expose:
       - 8000
     ports:
@@ -78,14 +77,20 @@ services:
   api-gateway:
     build:
       context: ./backend-services/api-gateway
+    container_name: api-gateway
     ports:
       - "8082:8082"
     depends_on:
-      - prediction
+      - model_inference
+    networks:
+      - monitoring
   
   favor8:
     build:
       context: ./backend-services/favor8
+    container_name: favor8
     ports:
       - "8080:8080"
+    networks:
+      - monitoring
   
