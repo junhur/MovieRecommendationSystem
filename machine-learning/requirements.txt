@@ -9,3 +9,4 @@ uvicorn==0.17.4
 scikit-learn
 azureml-core
 azureml-pipeline-core
+prometheus_client

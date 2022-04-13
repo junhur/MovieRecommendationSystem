@@ -1,0 +1,78 @@
+version: '3'
+
+networks:
+  monitoring:
+    name: monitoring
+    driver: bridge
+
+services:
+  # db:
+  #   image: postgres
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: postgres
+  #   volumes:
+  #     - ./data:/var/lib/postgresql/data
+  #   restart: always
+  #   command:
+  #     - "postgres"
+  #   volumes_from:
+  #     - db_data
+  #   networks:
+  #     - app
+  #   depends_on:
+  #     - db_data
+  python-app:
+    build: 
+      context: ./machine-learning
+    container_name: python-app
+    image: python-app
+    expose:
+      - 8000
+    ports:
+      - "8000:8000"
+    networks:
+      - monitoring
+
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: nodeexporter
+    expose:
+      - 9100
+    ports:
+      - 9100:9100
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus/:/etc/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    expose:
+      - 9090
+    ports:
+      - 9090:9090
+    networks:
+      - monitoring
+  
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    depends_on:
+      - prometheus
+    expose:
+      - 3000
+    ports:
+      - 3000:3000
+    environment:
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - monitoring
+  
+  

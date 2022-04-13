@@ -16,6 +16,9 @@ GENRES = [
 GENRES_MAP = {GENRES[i] : i + NUMERIC_VALUES for i in range(len(GENRES))}
 
 def generate_cos_sim_matrix(recommendation_map, watch_logs):
+    if (len(recommendation_map) == 0 or len(watch_logs) ==0):
+        return (None, None, None)
+        
     (rec_title_to_index_map, 
      rec_infos, 
      watched_title_to_index_map, 

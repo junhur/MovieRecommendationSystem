@@ -3,11 +3,11 @@ import pandas as pd
 
 with open("secrets.txt") as f:
     lines = f.readlines()
-    DB_HOST = lines[0].strip()
-    DB_PORT = int(lines[1])
-    DB_NAME = lines[2].strip()
-    DB_USER = lines[3].strip()
-    DB_PSWD = lines[4].strip()
+    DB_HOST = "128.2.205.110"
+    DB_PORT = 5432
+    DB_NAME = "movielog"
+    DB_USER = "gaomingt"
+    DB_PSWD = "1234"
 
 def get_movie_info_from_titles(recommended, watched):
     conn = psycopg2.connect(host=DB_HOST, port=DB_PORT, database=DB_NAME, user=DB_USER, password=DB_PSWD)
