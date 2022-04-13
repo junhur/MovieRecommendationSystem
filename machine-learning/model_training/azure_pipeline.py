@@ -22,14 +22,14 @@ if __name__=='__main__':
                                         service_principal_id=CLIENT_ID,  # clientId
                                         service_principal_password=CLIENT_SECRET)  # clientSecret
 
-    ws = Workspace.get(name="recommender",
+    ws = Workspace.get(name="new_recommender",
                        auth=sp,
                        subscription_id=SUBSCRIPTION_ID,
                        resource_group="favor8")
 
-    ppl = PublishedPipeline.get(ws, id='0ab4967e-5fd2-42d4-a76a-7cfb9a8707d3')
+    ppl = PublishedPipeline.get(ws, id='0d26de90-95bc-4b5e-8253-d80556b9b290')
 
-    pipeline_run = Experiment(ws, 'recommender_train').submit(ppl)
+    pipeline_run = Experiment(ws, 'recommender-test').submit(ppl)
     pipeline_run.wait_for_completion(show_output=True)
 
     metrics = pipeline_run.get_metrics()
