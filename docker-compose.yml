@@ -6,25 +6,6 @@ networks:
     driver: bridge
 
 services:
-  # db:
-  #   image: postgres
-  #   ports:
-  #     - "5432:5432"
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_DB: postgres
-  #   volumes:
-  #     - ./data:/var/lib/postgresql/data
-  #   restart: always
-  #   command:
-  #     - "postgres"
-  #   volumes_from:
-  #     - db_data
-  #   networks:
-  #     - app
-  #   depends_on:
-  #     - db_data
   model_inference:
     build: 
       context: ./machine-learning
