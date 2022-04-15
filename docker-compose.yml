@@ -35,7 +35,7 @@ services:
     image: prom/prometheus
     container_name: prometheus
     volumes:
-      - ./prometheus/:/etc/prometheus
+      - ./tmp/prometheus:/etc/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
     expose:
@@ -48,6 +48,7 @@ services:
   grafana:
     image: grafana/grafana
     container_name: grafana
+    user: "501"
     depends_on:
       - prometheus
     expose:
@@ -59,7 +60,7 @@ services:
     networks:
       - monitoring
     volumes:
-      - grafana-storage:/var/lib/grafana
+      - ./grafana-storage:/var/lib/grafana
       
   
   api-gateway:
