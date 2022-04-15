@@ -5,6 +5,10 @@ networks:
     name: monitoring
     driver: bridge
 
+volumes:
+  favor8:
+  grafana-storage:
+
 services:
   model_inference:
     build: 
@@ -54,6 +58,9 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
     networks:
       - monitoring
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      
   
   api-gateway:
     build:

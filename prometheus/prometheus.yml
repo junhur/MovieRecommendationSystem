@@ -36,7 +36,7 @@ scrape_configs:
   #       - targets: ['0.0.0.0:8765'] #target here
 
   - job_name: 'model_inference'
-    scrape_interval: 5s
+    scrape_interval: 300s
     static_configs:
         - targets: [ 'model_inference:8000' ]
 

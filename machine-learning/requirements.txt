@@ -11,3 +11,4 @@ fastapi-utils
 azureml-core
 azureml-pipeline-core
 prometheus_fastapi_instrumentator
+schedule

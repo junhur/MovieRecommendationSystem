@@ -52,6 +52,8 @@ async def recommend(userid: int):
 @api.get('/evaluate')
 async def evaluate():
     print("evaluate endpoint reached")
+    import pathlib
+    pathlib.Path().resolve()
     evaluator = OnlineEvaluator()
     return evaluator.evaluate()
 
