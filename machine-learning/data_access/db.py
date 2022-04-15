@@ -135,5 +135,25 @@ def get_user_watching_history():
     return pd.DataFrame(query_results, columns=['user_id', 'movie_title', 'start_time', 'end_time', 'runtime'])
 
 
+def get_latest_model_version():
+    conn = psycopg2.connect(host=DB_HOST, port=DB_PORT, database=DB_NAME, user=DB_USER, password=DB_PSWD)
+    cur = conn.cursor()
+    cur.execute('''SELECT MAX(model_version) FROM provenance''')
+    query_results = cur.fetchall()
+    cur.close()
+    conn.close()
+    return query_results[0][0]
+
+
+def record_model_metadata(model_version, git_hash, num_ratings, current_time):
+    conn = psycopg2.connect(host=DB_HOST, port=DB_PORT, database=DB_NAME, user=DB_USER, password=DB_PSWD)
+    cur = conn.cursor()
+    cur.execute('''INSERT INTO provenance (model_version, code_version, num_ratings, trained_at)
+                    VALUES (%s, %s, %s, %s)''', (model_version, git_hash, num_ratings, current_time))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
 if __name__ == '__main__':
     print(get_most_popular_movie_ids(100))

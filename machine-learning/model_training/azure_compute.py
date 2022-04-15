@@ -15,7 +15,7 @@ if __name__=='__main__':
                                         service_principal_id=CLIENT_ID,  # clientId
                                         service_principal_password=CLIENT_SECRET)  # clientSecret
 
-    ws = Workspace.get(name="recommender",
+    ws = Workspace.get(name="new_recommender",
                        auth=sp,
                        subscription_id=SUBSCRIPTION_ID,
                        resource_group="favor8")
