@@ -58,5 +58,5 @@ jobs:
       - 
         name: Push to Docker Hub
         run: |
-          docker push gmtang/favor8_api-gateway:m3
-          docker push gmtang/favor8_kafka-consumer:m3
+          docker push gmtang/favor8_api-gateway
+          docker push gmtang/favor8_kafka-consumer
