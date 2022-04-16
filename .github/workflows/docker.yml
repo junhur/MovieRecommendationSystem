@@ -10,7 +10,7 @@ on:
     branches: [ master, develop ]
 
 jobs:
-  build:
+  package:
 
     runs-on: ubuntu-latest
 
@@ -36,16 +36,10 @@ jobs:
       run: |
         mvn package -f ./backend-services/api-gateway/pom.xml
         mvn package -f ./backend-services/favor8/pom.xml
-
-    - 
-      name: Build Docker Images
-      run: |
-        docker build -t gmtang/favor8_api-gateway ./backend-services/api-gateway
-        docker build -t gmtang/favor8_kafka-consumer ./backend-services/favor8
-        
-    - 
-      name: Push to Docker Hub
-      run: |
-        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        docker push gmtang/favor8_api-gateway:m3
-        docker push gmtang/favor8_kafka-consumer:m3
+    -
+      name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: jars
+        path: backend-services/*/target/*.jar
+  
