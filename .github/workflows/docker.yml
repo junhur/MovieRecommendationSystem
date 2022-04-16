@@ -40,7 +40,7 @@ jobs:
         name: Rename JAR files
         run: |
           mv backend-services/api-gateway/target/*.jar backend-services/api-gateway/target/api-gateway.jar
-          mv backend-services/favor/target/*.jar backend-services/api-gateway/target/favor8.jar
+          mv backend-services/favor8/target/*.jar backend-services/api-gateway/target/favor8.jar
     
       -
         name: Upload Artifacts
