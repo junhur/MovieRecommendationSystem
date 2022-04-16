@@ -34,8 +34,8 @@ jobs:
         PG_USERNAME: ${{ secrets.VM_USERNAME }}
         PG_PASSWORD: ${{ secrets.VM_PASSWORD }}
       run: |
-        mvn clean install -f ./backend-services/api-gateway/pom.xml spring-boot:start
-        mvn clean install -f ./backend-services/favor8/pom.xml spring-boot:start
+        mvn package -f ./backend-services/api-gateway/pom.xml
+        mvn package -f ./backend-services/favor8/pom.xml
 
     - 
       name: Build Docker Images
