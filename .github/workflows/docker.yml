@@ -36,6 +36,7 @@ jobs:
         run: |
           mvn clean package -f ./backend-services/api-gateway/pom.xml
           mvn clean package -f ./backend-services/favor8/pom.xml
+
       - 
         name: Rename JAR files
         run: |
