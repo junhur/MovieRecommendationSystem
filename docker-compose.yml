@@ -11,15 +11,18 @@ volumes:
 
 services:
   model_inference:
-    build: 
+    build:
       context: ./machine-learning
     container_name: model_inference
     expose:
-      - 8000
+      - 7777
     ports:
-      - "8000:8000"
+      - "7777:7777"
     networks:
       - monitoring
+    volumes:
+      - ./machine-learning/pickled_objects:/app/pickled_objects
+      - ./.git/:/app/.git/
 
   node-exporter:
     image: quay.io/prometheus/node-exporter:latest
@@ -82,4 +85,3 @@ services:
       - "8080:8080"
     networks:
       - monitoring
-  

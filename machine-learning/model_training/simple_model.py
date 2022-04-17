@@ -21,7 +21,6 @@ sys.path.insert(0, path)
 from data_access.db import get_user_ratings, get_movie_info, get_user_watching_history
 
 trained_model_path = path + '/pickled_objects/'
-print(trained_model_path)
 
 
 def cf_get_top_n(predictions, n=10):
