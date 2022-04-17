@@ -8,7 +8,7 @@ RUN pip3 install --no-cache --upgrade -r /app/requirements.txt
 COPY . /app/
 EXPOSE 8000
 
-CMD uvicorn --host=0.0.0.0 --port=7777 --reload api:api
+CMD uvicorn --host=0.0.0.0 --port=7777 api:api
 
 
 
