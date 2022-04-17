@@ -1,5 +1,5 @@
 FROM openjdk:11
 VOLUME /tmp
-COPY target/*.jar favor8.jar
+COPY target/*.jar ./
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/favor8.jar"]
+ENTRYPOINT ["java", "-jar", "*.jar"]

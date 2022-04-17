@@ -1,0 +1,47 @@
+name: Docker CI
+
+on:
+  push:
+    branches: [ feature/docker-ci ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+    
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+    
+      - name: Build with Maven
+        env:
+          SPRING_PROFILES_ACTIVE: secret
+          PG_URL: ${{ secrets.VM_URL }}
+          PG_USERNAME: ${{ secrets.VM_USERNAME }}
+          PG_PASSWORD: ${{ secrets.VM_PASSWORD }}
+        run: |
+          mvn package -DskipTests -f ./backend-services/api-gateway/pom.xml
+          mvn package -Dtest=\!Favor8ApplicationTests -f ./backend-services/favor8/pom.xml
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Build Docker Images
+        run: |
+          docker build -t gmtang/favor8_api-gateway ./backend-services/api-gateway
+          docker build -t gmtang/favor8_kafka-consumer ./backend-services/favor8
+        
+      - name: Push to Docker Hub
+        run: |
+          docker push gmtang/favor8_api-gateway
+          docker push gmtang/favor8_kafka-consumer

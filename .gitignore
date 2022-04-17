@@ -5,9 +5,11 @@ backend-services/**/HELP.md
 backend-services/**/config/*-*.yml
 backend-services/**/target/
 backend-services/**/!.mvn/wrapper/maven-wrapper.jar
-backend-services/**/!**/src/main/**/target/
-backend-services/**/!**/src/test/**/target/
 machine-learning/**/__pycache__/
+backend-services/**/*.jar
+backend-services/**/*.cmd
+backend-services/**/mvnw
+backend-services/**/maven*
 
 ### STS ###
 **/.apt_generated
@@ -26,6 +28,3 @@ machine-learning/**/__pycache__/
 
 ### VS Code ###
 **/.vscode/
-
-### model files ###
-**/*.pkl
