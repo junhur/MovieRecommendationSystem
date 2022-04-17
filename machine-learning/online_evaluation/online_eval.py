@@ -26,21 +26,29 @@ class OnlineEvaluator:
 
     
     def evaluate(self):
-        return {
-            "cos_sim": self.calculate_cos_sim(), 
-            "avg_response_time": self.calculate_avg_response_time(),
-            "avg_minute_count": self.calculate_minute_count()
-        }
+        evaluate_response = {}
+        if len(self.recommendation_map) == 0:
+            evaluate_response["cos_sim"] = 0
+            evaluate_response["avg_response_time"] = 0
+            evaluate_response["avg_minute_count"] = 0
+        else:
+            evaluate_response["cos_sim"] = self.calculate_cos_sim()
+            evaluate_response["avg_response_time"]= self.calculate_avg_response_time()
+            evaluate_response["avg_minute_count"]= self.calculate_minute_count()
+        
+        return evaluate_response
 
     def calculate_avg_response_time(self):
         response_times = 0
         for rec in self.recommendation_map.values():
             response_times += rec.response_time
-        
+
         return response_times / len(self.recommendation_map)
     
     def calculate_cos_sim(self):
         (rec_title_to_index_map, watched_title_to_index_map, cos_sim_matrix) = generate_cos_sim_matrix(self.recommendation_map, self.watch_logs)
+        if any([rec_title_to_index_map is None, watched_title_to_index_map is None, cos_sim_matrix is None]):
+            return 0
         max_cos_sims = []
         for k,v in self.recommendation_map.items():
             recommendations = v.results

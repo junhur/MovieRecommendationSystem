@@ -1,0 +1,87 @@
+version: '3'
+
+networks:
+  monitoring:
+    name: monitoring
+    driver: bridge
+
+volumes:
+  favor8:
+  grafana-storage:
+
+services:
+  model_inference:
+    build:
+      context: ./machine-learning
+    container_name: model_inference
+    expose:
+      - 7777
+    ports:
+      - "7777:7777"
+    networks:
+      - monitoring
+    volumes:
+      - ./machine-learning/pickled_objects:/app/pickled_objects
+      - ./.git/:/app/.git/
+
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: nodeexporter
+    expose:
+      - 9100
+    ports:
+      - 9100:9100
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./tmp/prometheus:/etc/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    expose:
+      - 9090
+    ports:
+      - 9090:9090
+    networks:
+      - monitoring
+  
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    user: "0:27"
+    depends_on:
+      - prometheus
+    expose:
+      - 3000
+    ports:
+      - 3000:3000
+    environment:
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - monitoring
+    volumes:
+      - ./grafana-storage:/var/lib/grafana
+      
+  
+  api-gateway:
+    build:
+      context: ./backend-services/api-gateway
+    container_name: api-gateway
+    ports:
+      - "8082:8082"
+    depends_on:
+      - model_inference
+    networks:
+      - monitoring
+  
+  favor8:
+    build:
+      context: ./backend-services/favor8
+    container_name: favor8
+    ports:
+      - "8080:8080"
+    networks:
+      - monitoring
