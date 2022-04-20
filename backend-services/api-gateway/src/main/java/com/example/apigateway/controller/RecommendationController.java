@@ -25,9 +25,6 @@ public class RecommendationController {
     @GetMapping("{userId}")
     public String recommend(@PathVariable Integer userId) {
 
-//        String req = String.format("[{\"user_id\": \"%s\",\"movie_title\": \"default\",\"score\": -1}]", userId);
-
-
         try {
             ResponseEntity<String> res = restTemplate.getForEntity(requestUrl + userId, String.class);
             log.info("called model api, response: {}", res.getBody());
