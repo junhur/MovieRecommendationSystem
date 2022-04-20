@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RestController
 @RequestMapping("recommend")
 @RequiredArgsConstructor
@@ -17,24 +20,31 @@ import org.springframework.web.client.RestTemplate;
 public class RecommendationController {
 
     private final RestTemplate restTemplate;
+    private final static String requestUrl = "http://model_inference:8000/recommend/";
 
     @GetMapping("{userId}")
     public String recommend(@PathVariable Integer userId) {
 
-        String req = String.format("[{\"user_id\": \"%s\",\"movie_title\": \"default\",\"score\": -1}]", userId);
+//        String req = String.format("[{\"user_id\": \"%s\",\"movie_title\": \"default\",\"score\": -1}]", userId);
+
 
         try {
-            ResponseEntity<ResponseDto> res = restTemplate.postForEntity(
-                    "http://20.65.16.87/api/v1/service/svd-model-r/score/",
-                    req,
-                    ResponseDto.class
-            );
-            ResponseDto responseDto = res.getBody();
-            log.info("req from user {}, res: {}", userId, res.getBody());
-            if (res.getStatusCode() != HttpStatus.OK || responseDto == null) {
-                throw new Exception("request not successful or empty response");
+            ResponseEntity<String> res = restTemplate.getForEntity(requestUrl + userId, String.class);
+            log.info("called model api, response: {}", res.getBody());
+            String response = res.getBody().substring(1, res.getBody().length() -1);
+            String[] recommendations = response.split(",");
+            StringBuilder responseBuilder = new StringBuilder();
+            List<String> recommendationResults = new ArrayList<>();
+            for (int i= 0; i < recommendations.length-1; i ++) {
+                responseBuilder.append(recommendations[i]);
+                if (i != recommendations.length -2) {
+                    responseBuilder.append(", ");
+                }
+                recommendationResults.add(recommendations[i]);
             }
-            return String.join(",", responseDto.getRecommendations());
+            String recommendationResponse = responseBuilder.toString();
+            recommendationResponse = recommendationResponse.substring(1, recommendationResponse.length()-1);
+            return recommendationResponse;
         } catch (Exception e) {
             System.out.println(e.getMessage());
             log.warn("Can't connect to ML services, returning default recommendation.");
