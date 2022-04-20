@@ -10,14 +10,25 @@ volumes:
   grafana-storage:
 
 services:
+  online_evaluation:
+    build:
+      context: ./online_evaluation_service
+    container_name: online_evaluation
+    expose:
+      - 7777
+    ports:
+      - "7777:7777"
+    networks:
+      - monitoring
+
   model_inference:
     build:
       context: ./machine-learning
     container_name: model_inference
     expose:
-      - 7777
+      - 8000
     ports:
-      - "7777:7777"
+      - "8000:8000"
     networks:
       - monitoring
     volumes:

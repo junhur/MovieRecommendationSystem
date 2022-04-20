@@ -51,8 +51,8 @@ async def evaluate():
     evaluator = OnlineEvaluator()
     return evaluator.evaluate()
 
-@api.on_event('startup')
-@repeat_every(seconds=60*60*24)
+# @api.on_event('startup')
+# @repeat_every(seconds=60*60*24)
 def retrain():
     retrain_model()
 
@@ -78,6 +78,6 @@ def online_evaluation_metrics():
         AVG_MINUTE_COUNT.set(online_metrics["avg_minute_count"])
     return instrumentation
 
-instrumentator.add(online_evaluation_metrics())
+# instrumentator.add(online_evaluation_metrics())
 instrumentator.instrument(api)
 instrumentator.expose(api, include_in_schema=True, should_gzip=True)
