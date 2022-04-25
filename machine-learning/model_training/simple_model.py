@@ -65,6 +65,8 @@ def collaborative_filtering(algo_f, data_df=None, extra_df=False, n_rec=20, hp_t
             extra_df['score'] = 5 * (extra_df['end_time'] - extra_df['start_time']) / extra_df['runtime']
             data_df = data_df.append(extra_df[['user_id', 'movie_title', 'score']], ignore_index=True)
     reader = Reader(rating_scale=(1, 5))
+    n_threshold = 5000
+    data_df = data_df if len(data_df) < n_threshold else data_df.sample(n=n_threshold)
     data = Dataset.load_from_df(data_df, reader)
     trainset = data.build_full_trainset()
     testset = trainset.build_anti_testset()
