@@ -1,7 +1,6 @@
-import copy
-import json
-import sys
+import sys, copy, time, json, argparse, subprocess
 from collections import defaultdict
+from datetime import datetime
 
 import dill as pickle
 import pandas as pd
@@ -14,6 +13,9 @@ from surprise.model_selection import cross_validate, GridSearchCV
 from surprise import SVD, SVDpp, KNNBaseline
 
 from pathlib import Path
+
+from model_inference.inference import CF_inference_fast
+
 path = str(Path(Path(__file__).parent.absolute()).parent.absolute())
 sys.path.insert(0, path)
 from data_access.db import get_user_ratings, get_movie_info, get_user_watching_history
@@ -36,7 +38,7 @@ def cf_get_top_n(predictions, n=10):
     return top_n
 
 
-def collaborative_filtering(algo_f, data_df=None, extra_df=False, n_rec=20, hp_tune=False, cv_fold=5, metrics=None):
+def collaborative_filtering(algo_f, data_df=None, extra_df=False, n_rec=20, hp_tune=False, cv_fold=5, metrics=None, version=None):
     '''
     Explicit collaborative filtering with surprise
     :param algo_f: algorithms supported by surprise
@@ -58,10 +60,13 @@ def collaborative_filtering(algo_f, data_df=None, extra_df=False, n_rec=20, hp_t
         data_df = get_user_ratings()
         if extra_df:
             extra_df = get_user_watching_history()
-            extra_df = extra_df.loc[(extra_df['runtime'] > 0) & (extra_df['start_time'] >= 0) & (extra_df['end_time'] >= 0)]
+            extra_df = extra_df.loc[
+                (extra_df['runtime'] > 0) & (extra_df['start_time'] >= 0) & (extra_df['end_time'] >= 0)]
             extra_df['score'] = 5 * (extra_df['end_time'] - extra_df['start_time']) / extra_df['runtime']
             data_df = data_df.append(extra_df[['user_id', 'movie_title', 'score']], ignore_index=True)
     reader = Reader(rating_scale=(1, 5))
+    n_threshold = 5000
+    data_df = data_df if len(data_df) < n_threshold else data_df.sample(n=n_threshold)
     data = Dataset.load_from_df(data_df, reader)
     trainset = data.build_full_trainset()
     testset = trainset.build_anti_testset()
@@ -79,26 +84,27 @@ def collaborative_filtering(algo_f, data_df=None, extra_df=False, n_rec=20, hp_t
     predictions = algo.test(testset)
     top_n = cf_get_top_n(predictions, n=n_rec)
 
+    identifier = algo_name + '_' + str(version) if version is not None else algo_name
     # Pickle the predictive model
     try:
-        with open(trained_model_path + '{}.pkl'.format(algo_name), 'wb') as file:
+        with open(trained_model_path + '{}.pkl'.format(identifier), 'wb') as file:
             pickle.dump(algo, file)
     except Exception:
-        print('{} model file generation failed'.format(algo_name))
+        print('{} model file generation failed'.format(identifier))
 
     # Pickle the dataset
     try:
-        with open(trained_model_path + '{}_data.pkl'.format(algo_name), 'wb') as file:
+        with open(trained_model_path + '{}_data.pkl'.format(identifier), 'wb') as file:
             pickle.dump(data_df, file)
     except Exception:
-        print('{} model data file generation failed'.format(algo_name))
+        print('{} model data file generation failed'.format(identifier))
 
     # Pickle the prediction results
     try:
-        with open(trained_model_path + '{}_preds.pkl'.format(algo_name), 'wb') as file:
+        with open(trained_model_path + '{}_preds.pkl'.format(identifier), 'wb') as file:
             pickle.dump(top_n, file)
     except Exception:
-        print('{} model prediction file generation failed'.format(algo_name))
+        print('{} model prediction file generation failed'.format(identifier))
 
     return pred_accuracy['test_rmse'], pred_accuracy['test_mae']
 
@@ -144,8 +150,38 @@ def content_based_filtering(data_df=None):
         print('content based titles file generation failed')
 
 
+def train_model(args=None, data=None, version=None):
+    algo_f_dict = {'svd': SVD, 'svd++': SVDpp, 'knn': KNNBaseline}
+    if args is None:
+        collaborative_filtering(SVD, data_df=data, n_rec=20, hp_tune=False, cv_fold=5, version=version)
+    else:
+        try:
+            algo_f = algo_f_dict[args.algo]
+        except KeyError:
+            print('Algorithm {} not supported'.format(args.algo))
+            return
+        collaborative_filtering(algo_f, data_df=data, n_rec=args.n_rec, hp_tune=args.hp_tune, cv_fold=args.cv_fold,
+                                version=version)
+
+
+def test_model():
+    # offline evaluation was implemented with the Azure ML studio in M2
+    pass
+
+
 if __name__ == '__main__':
-    collaborative_filtering(SVD)
-    collaborative_filtering(SVDpp)
-    collaborative_filtering(KNNBaseline)
-    content_based_filtering()
+    # get arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-m', '--mode', type=str, default='train', help='train or test')
+    parser.add_argument('-a', '--algo', type=str, default='svd', help='algorithm name')
+    parser.add_argument('-n', '--n_rec', type=int, default=20, help='number of recommendations')
+    parser.add_argument('-t', '--hp_tune', type=bool, default=False, help='hyperparameter tuning')
+    parser.add_argument('-c', '--cv_fold', type=int, default=5, help='number of cross validation folds')
+    args = parser.parse_args()
+
+    # train model
+    if args.mode == 'train':
+        train_model(args)
+    # test model (offline evaluation)
+    elif args.mode == 'test':
+        test_model()

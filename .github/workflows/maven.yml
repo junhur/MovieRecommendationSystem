@@ -3,7 +3,11 @@
 
 name: Java CI with Maven
 
-on: push
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   build:
@@ -18,12 +22,5 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: maven
-    - name: Cache Maven packages
-      #This action allows caching dependencies and build outputs to improve workflow execution time.
-      uses: actions/cache@v1
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
     - name: Build with Maven
-      run: mvn -B package --file backend-services/favor8/pom.xml
+      run: mvn -B package --file ~/backend-services/favor8/pom.xml

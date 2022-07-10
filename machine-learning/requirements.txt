@@ -7,5 +7,8 @@ scikit_surprise==1.1.1
 surprise==0.1
 uvicorn==0.17.4
 scikit-learn
+fastapi-utils
 azureml-core
 azureml-pipeline-core
+prometheus_fastapi_instrumentator
+schedule

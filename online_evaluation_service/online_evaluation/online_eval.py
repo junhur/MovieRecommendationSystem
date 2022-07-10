@@ -15,9 +15,6 @@ class OnlineEvaluator:
             user_id, movie_title, _, rec_id, _, recommendations, minute, response_time = result
             recommendations = list(map(lambda x: x.strip(), recommendations))
             
-            # TODO: temporary care for a bug in recommendation request parsing
-            recommendations = recommendations[:-1] 
-
             movie_title = movie_title.strip()
             self.recommendation_map[rec_id] = RecommendationResult(user_id, recommendations, response_time)
             if movie_title not in self.watch_logs[rec_id]:
